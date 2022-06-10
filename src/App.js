@@ -67,6 +67,7 @@ class App extends React.Component {
 
         // 처리
         const data = {
+            body: JSON.stringify({"content" : inputValue}),
             headers: {'Content-Type': 'application/json'},
             method: 'post'
         }
