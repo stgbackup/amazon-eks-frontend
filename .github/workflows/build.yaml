@@ -53,6 +53,11 @@ jobs:
       - name: Setup Kustomize
         uses: imranismail/setup-kustomize@v1
 
+      - name: Set git config
+          run: |
+            git config --global user.email "nasamjang02@gmail.com"
+            git config --global user.name "devhyunwook"
+
       - name: Checkout kustomize repository
         uses: actions/checkout@v2
         with:
