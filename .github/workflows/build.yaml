@@ -1,5 +1,5 @@
 
-name: Build react frontend
+name: React frontend Build and Image upload and Kustomize build
 
 on:
   push:
@@ -9,17 +9,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # 소스 checkout
       - name: Checkout source code
         uses: actions/checkout@v2
 
+      # Frontend 빌드 수행을 위한 node 버전체크
       - name: Check current node version
         run: node -v
 
+      # Frontend 빌드 수행
       - name: Build react frontend
         run: |
           npm install
           npm run build
 
+      # ECR 업로드를 위해 credentials정보를 변수에 저장 (github repo secret에 선저장)
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -27,10 +31,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
+      # ECR에 로그인 수행
       - name: Login to Amazon ECR for docker image save
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
+      # repo에 commit 번호를 변수에 저장 (ECR에 업로드 식별자로 8자리 사용)
       - name: Get docker image tag(verion)
         id: image
         run: |
@@ -38,6 +44,8 @@ jobs:
           echo VERSION=$VERSION
           echo "::set-output name=version::$VERSION"
 
+      # repo에 commit 번호를 변수에 저장 (ECR에 업로드 식별자로 8자리 사용)
+      # docker 빌드 수행, docker image를 ECR에 Push 수행
       - name: Build, tag, and push image to Amazon ECR
         id: image-info
         env:
@@ -50,6 +58,7 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
+      # kustomize 빌드단계
       - name: Setup Kustomize
         uses: imranismail/setup-kustomize@v1
 
@@ -58,6 +67,7 @@ jobs:
           git config --global user.email "nasamjang02@gmail.com"
           git config --global user.name "devhyunwook"
 
+      # k8s manifest가 정리되어 있는 github repo 정보 저장
       - name: Checkout kustomize repository
         uses: actions/checkout@v2
         with:
@@ -66,6 +76,7 @@ jobs:
           token: ${{ secrets.ACTION_TOKEN }}
           path: k8s-manifest-repo
 
+      # k8s-manifest-repo의 kustomization.yaml에  image tag 정보을 수정(최신 tag명으로 업데이트)
       - name: Update Kubernetes resources
         run: |
           echo \${{ steps.login-ecr.outputs.registry }}
@@ -75,6 +86,7 @@ jobs:
           kustomize edit set image \${{ steps.login-ecr.outputs.registry}}/\${{ steps.image-info.outputs.ecr_repository }}=\${{ steps.login-ecr.outputs.registry}}/\${{ steps.image-info.outputs.ecr_repository }}:\${{ steps.image-info.outputs.image_tag }}
           cat kustomization.yaml
 
+      # k8s-manifest-repo에 kustomization.yaml commit/push 수행
       - name: Commit files
         run: |
           cd k8s-manifest-repo
