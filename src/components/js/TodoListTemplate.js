@@ -6,7 +6,7 @@ const TodoListTemplate = ({ form, children }) => {
     return (
         <main className="todo-list-template">
             <div className="todo-list-title">
-                SMP JIRA TODO 오늘 할 일
+                SMP JIRA TODO LIST
             </div>
             <section className="form-wrapper">
                 {form}
