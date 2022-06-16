@@ -1,6 +1,7 @@
-# nginx 이미지를 사용합니다. 뒤에 tag가 없으면 latest 를 사용합니다.
+# nginx 이미지 사용.
+# 뒤에 tag가 없으면 latest 를 사용
 FROM nginx:latest
-LABEL Author="joozero@amazon.com"
+LABEL Author="nasamjang02@gmail.com"
 
 # root에 app 폴더 생성 및 work dir 고정
 RUN mkdir /app
@@ -21,5 +22,5 @@ COPY ./nginx.conf /etc/nginx/conf.d
 # 80 포트 오픈
 EXPOSE 80
 
-# container 실행 시 자동으로 실행할 command. nginx 시작함
+# container 실행 시 자동으로 실행할 command. nginx 시작
 CMD ["nginx", "-g", "daemon off;"]
